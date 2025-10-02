@@ -23,6 +23,11 @@
       color: #aaa;
       margin-top: -10px;
     }
+    /* Paused state stops animations/transitions */
+    body.paused * {
+      animation-play-state: paused !important;
+      transition: none !important;
+    }
   </style>
 </head>
 <body>
@@ -36,22 +41,55 @@
   <script>
     const totalImages = 202;
     const imageBoxes = document.querySelectorAll('.quote-box img');
+
     function getRandomImagePath(){
-        const index = Math.floor(Math.random() * totalImages) + 1;
-        return `quotes/${index}.png`;
+      const index = Math.floor(Math.random() * totalImages) + 1;
+      return `quotes/${index}.png`;
     }
+
     function updateImage(img) {
-        const newSrc = getRandomImagePath();
-        img.style.opacity = 0;
-        setTimeout(() => {
-            img.src = newSrc;
-            img.onload = () => img.style.opacity = 1;
-        }, 300);
+      const newSrc = getRandomImagePath();
+      img.style.opacity = 0;
+      setTimeout(() => {
+        img.src = newSrc;
+        img.onload = () => img.style.opacity = 1;
+      }, 300);
     }
-    imageBoxes.forEach(img => {
+
+    // store intervals so we can clear them when paused
+    let intervals = [];
+
+    function startImageRotation() {
+      imageBoxes.forEach(img => {
         img.src = getRandomImagePath();
         img.style.opacity = 1;
-        setInterval(() => updateImage(img), 3000)
+        const id = setInterval(() => updateImage(img), 3000);
+        intervals.push(id);
+      });
+    }
+
+    function stopImageRotation() {
+      intervals.forEach(id => clearInterval(id));
+      intervals = [];
+    }
+
+    // Start initially
+    startImageRotation();
+
+    // Pause/resume with spacebar
+    let paused = false;
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault(); // stop page from scrolling
+        paused = !paused;
+        document.body.classList.toggle("paused", paused);
+
+        if (paused) {
+          stopImageRotation();
+        } else {
+          startImageRotation();
+        }
+      }
     });
   </script>
 </body>
